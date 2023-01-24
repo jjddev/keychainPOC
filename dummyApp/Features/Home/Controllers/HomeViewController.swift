@@ -22,46 +22,5 @@ final class HomeViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
     }
-    
-
-    
-    func createEntry(key: String, secret: String) {
-        let attributes: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: key,
-            kSecValueData as String: secret
-        ]
-        
-        if SecItemAdd(attributes as CFDictionary, nil) == noErr {
-            print("saved")
-        } else {
-            print("error")
-        }
-    }
-    
-    func searchItem(key: String) {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: key,
-            kSecMatchLimit as String: kSecMatchLimitOne,
-            kSecReturnAttributes as String: true,
-            kSecReturnData as String: true
-        ]
-        
-        var item: CFTypeRef?
-        
-        if SecItemCopyMatching(query as CFDictionary, &item) == noErr {
-            if let existingItem = item as? [String: Any],
-               let key = existingItem[kSecAttrAccount as String] as? String,
-               let passwordData = existingItem[kSecValueData as String] as? Data,
-               let password = String(data: passwordData, encoding: .utf8) {
-                print("key: \(key)")
-                print("password: \(password)")
-            }
-            
-        } else {
-            print("error")
-        }
-    }
 }
 
