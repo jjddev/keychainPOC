@@ -1,13 +1,10 @@
 import UIKit
-import Security
 import LocalAuthentication
 
-
-class LoginViewController: UIViewController {
+final class LoginViewController: UIViewController {
     
     let mainView: LoginView
     let navigation: UINavigationController
-    let context = LAContext()
     var biometryType: String = ""
     
     init(navigation: UINavigationController) {
@@ -31,14 +28,14 @@ class LoginViewController: UIViewController {
         super.viewDidLoad()
     }
     
-
-    func checkForBiometric() {
+    private func checkForBiometric() {
         var error: NSError?
+        let context = LAContext()
         let permissions = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
         
         switch context.biometryType {
         case .none:
-            biometryType = "Nenhuma disponível"
+            biometryType = "Biometria não disponível"
         case .touchID:
             biometryType = "TouchID"
         case .faceID:
@@ -51,78 +48,25 @@ class LoginViewController: UIViewController {
         print("permission: \(permissions)")
         print("biometry: \(biometryType)")
         
-        
-        
-        let message: String
-        if permissions {
-            message = ">> Touch ID disponível"
-        } else {
-            message = ">> Touch ID não disponível"
-        }
-        
+        let message: String = permissions ? ">> \(biometryType) disponível" : ">> \(biometryType) não disponível ou bloqueado"
         setStatus(status: permissions, message: message)
     }
     
     func validedBiometry() {
         
-        
         let loginAction: (() -> Void)? = { [weak self]  in
-            self?.context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "Log in with Touch ID") { [self] success, error in
-                if success {
-                    DispatchQueue.main.async {
-                        
-                        if let data = self?.searchEntry(key: self?.mainView.keyTextField.text ?? "") {
-                            self?.navigation.pushViewController(SecretViewController(user: data.0, password: data.1, biometryType: self?.biometryType ?? ""), animated: true)
-                        } else {
-                            print("chave não encontrada")
-                        }
-                        
-                        
-                        
-                    }
-                } else {
-                    DispatchQueue.main.async {
-                        self?.setStatus(status: false, message: ">>Biometria inválida")
-                    }
-                }
-            }
-        }
-        
-        
-        mainView.loginAction = loginAction
-        
-    }
-    
-    private func searchEntry(key: String) -> (String, String)? {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: key,
-            kSecMatchLimit as String: kSecMatchLimitOne,
-            kSecReturnAttributes as String: true,
-            kSecReturnData as String: true
-        ]
-        
-        var item: CFTypeRef?
-        
-        if SecItemCopyMatching(query as CFDictionary, &item) == noErr {
-            if let existingItem = item as? [String: Any],
-               let key = existingItem[kSecAttrAccount as String] as? String,
-               let passwordData = existingItem[kSecValueData as String] as? Data,
-               let password = String(data: passwordData, encoding: .utf8) {
-                print("key: \(key)")
-                print("password: \(password)")
-                
-                return (key, password)
-            }
             
-        } else {
-            print("error")
-            return nil
+            let query = KeychainHelper.buildFetchQuery(key: self?.mainView.keyTextField.text ?? "")
+            if let data = KeychainHelper.fetch(query: query) {
+                self?.navigation.pushViewController(SecretViewController(user: data.0, password: data.1, biometryType: self?.biometryType ?? ""), animated: true)
+            } else {
+                self?.setStatus(status: false, message: ">>biometria falhou ou foi cancelada")
+            }
         }
-        
-        return nil
+     
+        mainView.loginAction = loginAction
     }
-    
+        
     func setStatus(status: Bool, message: String) {
         mainView.statusLabel.text = message
         mainView.statusLabel.textColor = status ? .green : .red
