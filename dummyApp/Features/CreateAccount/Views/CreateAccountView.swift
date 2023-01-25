@@ -26,6 +26,16 @@ final class CreateAccountView: UIView {
         textField.autocorrectionType = .no
         textField.autocapitalizationType = .none
         textField.textContentType = .password
+        textField.isSecureTextEntry = true
+        
+        let button = UIButton(type: .custom)
+        button.setImage(UIImage(systemName: "eye.slash"), for: .normal)
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -15, bottom: 0, right: 0)
+        button.addTarget(self, action: #selector(toggleSecureText), for: .primaryActionTriggered)
+        
+        textField.rightView = button
+        textField.rightViewMode = .always
+        
         return textField
     }()
     
@@ -81,6 +91,14 @@ final class CreateAccountView: UIView {
         
         createAccountAction?()
     }
+    
+    @objc
+    private func toggleSecureText(_ sender: UIButton) {
+        let imageName = passwordTextField.isSecureTextEntry ? "eye" : "eye.slash"
+        sender.setImage(UIImage(systemName: imageName), for: .normal)
+        passwordTextField.isSecureTextEntry.toggle()
+    }
+    
 }
 
 
