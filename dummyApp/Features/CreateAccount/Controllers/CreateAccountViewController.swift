@@ -31,15 +31,27 @@ final class CreateAccountViewController: UIViewController {
             let query = KeychainHelper.buildFetchQuery(key: self?.mainView.keyTextField.text ?? "")
             
             if KeychainHelper.fetch(query: query) == nil {
+                
+                let alertController = UIAlertController(title: "", message: "", preferredStyle: .alert)
                 if let error = KeychainHelper.save(key: self?.mainView.keyTextField.text ?? "", value: self?.mainView.passwordTextField.text ?? "") {
                     print(">>error when trying save \(error)")
+                    
+                    alertController.title = "Erro ao salvar a chave"
+                    alertController.message = error.localizedDescription
+                    alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+                    self?.navigation.topViewController?.present(alertController, animated: true)
                 }
                 
-                let alertController = UIAlertController(title: "Sucesso", message: "Chave criada com sucesso", preferredStyle: .alert)
+                alertController.title = "Sucesso"
+                alertController.message = "Chave criada com sucesso"
                 alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: { _ in
                     self?.navigation.popViewController(animated: true)
                 }))
                 
+                self?.navigation.topViewController?.present(alertController, animated: true)
+            } else {
+                let alertController = UIAlertController(title: "Erro", message: "Não foi possível criar essa chave pois ela já existe.", preferredStyle: .alert)
+                alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
                 self?.navigation.topViewController?.present(alertController, animated: true)
             }
         }
