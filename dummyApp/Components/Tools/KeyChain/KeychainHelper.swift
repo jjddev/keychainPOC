@@ -57,6 +57,12 @@ final class KeychainHelper {
         return status == noErr ? nil : KeychainHelperError(status: status)
     }
     
+    static func deleteAll() -> KeychainHelperError? {
+        let attributes: [String: Any] = [kSecClass as String: kSecClassGenericPassword]
+        let status = SecItemDelete(attributes as CFDictionary)
+        return status == noErr ? nil : KeychainHelperError(status: status)
+    }
+    
     static func buildSaveQuery(key: String, value: String, access: SecAccessControl?, authenticationContext: Bool = false) -> [String: Any] {
         var attributes: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -92,4 +98,11 @@ struct KeychainHelperError: Error {
     var localizedDescription: String {
         return SecCopyErrorMessageString(status, nil) as String? ?? "Unknown error."
     }
+}
+
+struct KeychainData {
+    let key: String
+    let value: String
+    var statusDescription: String
+    let status: OSStatus
 }
